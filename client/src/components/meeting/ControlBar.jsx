@@ -95,7 +95,7 @@ const ControlBar = ({ roomId, audioEnabled, videoEnabled, onToggleAudio, onToggl
       {/* Right Placeholder */}
 
       <div className="hidden sm:block w-32 text-right">
-        <span className="font-medium text-slate-400">MeetUp Room</span>
+        <span className="font-medium text-slate-400">Confera Room</span>
       </div>
 
     </footer>
