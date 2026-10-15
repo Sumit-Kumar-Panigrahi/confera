@@ -1,38 +1,114 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:ital,wght@0,100..900;1,100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #004cff;
-    --color-primary-hover: #0033ad;
-    --color-primary-light: #d9e4ff;
-    --color-primary-border: #7a9cff;
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
+    --color-primary-light: #1e3a8a;
+    --color-primary-border: #60a5fa;
+    --color-dark-bg: #080c14;
+    --color-dark-card: #0f172a;
+    --color-dark-border: #1e293b;
 }
+
 @layer base {
     * {
-        font-family: "Urbanist", sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         box-sizing: border-box;
     }
 
     body {
-        @apply bg-slate-50 text-slate-900 antialiased min-h-screen selection:bg-primary/20 selection:text-primary-hover;
+        background-color: #080c14;
+        color: #f8fafc;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        min-height: 100vh;
+        selection-background-color: #3b82f6;
+        selection-color: #ffffff;
+        overflow-x: hidden;
+    }
+
+    code, kbd, samp, pre {
+        font-family: 'JetBrains Mono', monospace;
     }
 }
 
-/* Custom Scrollbar for Light Mode */
+/* Custom Scrollbar for Dark Theme */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #080c14;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #1e293b;
     border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #334155;
+}
+
+/* Glassmorphic Dark SaaS Cards */
+.dark-saas-card {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-saas-card:hover {
+    border-color: rgba(96, 165, 250, 0.35);
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.7), 0 0 25px rgba(59, 130, 246, 0.12);
+    transform: translateY(-2px);
+}
+
+/* Neon subtle glow effects */
+.glow-blue {
+    box-shadow: 0 0 35px -5px rgba(59, 130, 246, 0.25);
+}
+
+.glow-purple {
+    box-shadow: 0 0 35px -5px rgba(168, 85, 247, 0.25);
+}
+
+.glow-emerald {
+    box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.25);
+}
+
+/* Smooth dialog fade-in */
+@keyframes dialogFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.animate-dialog {
+    animation: dialogFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Ambient background pulse */
+@keyframes ambientPulse {
+    0%, 100% {
+        opacity: 0.15;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.25;
+        transform: scale(1.08);
+    }
+}
+
+.animate-ambient {
+    animation: ambientPulse 8s ease-in-out infinite;
 }

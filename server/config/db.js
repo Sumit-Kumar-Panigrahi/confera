@@ -55,6 +55,12 @@ export async function initDB(){
             );
         `;
 
+        await sql`CREATE INDEX IF NOT EXISTS idx_meetings_host_id ON meetings(host_id);`;
+        await sql`CREATE INDEX IF NOT EXISTS idx_meetings_meeting_id ON meetings(meeting_id);`;
+        await sql`CREATE INDEX IF NOT EXISTS idx_participants_meeting_id ON meeting_participants(meeting_id);`;
+        await sql`CREATE INDEX IF NOT EXISTS idx_participants_user_id ON meeting_participants(user_id);`;
+        await sql`CREATE INDEX IF NOT EXISTS idx_messages_meeting_id ON meeting_messages(meeting_id);`;
+
     } catch (error) {
         console.error("Error initializing database tables:", error);
         throw error;
