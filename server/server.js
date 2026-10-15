@@ -17,19 +17,25 @@ const server = http.createServer(app);
 await initDB();
 
 const allowedOrigins = process.env.ORIGINS 
-    ? process.env.ORIGINS.split(",").map(o => o.trim()) 
+    ? process.env.ORIGINS.split(",").map(o => o.trim().replace(/\/$/, "")) 
     : ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174"];
 
-app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, curl, or server-to-server)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-            return callback(null, true);
-        }
+const checkOrigin = (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+    if (!origin) return callback(null, true);
+    const cleanOrigin = origin.replace(/\/$/, "");
+    if (allowedOrigins.includes(cleanOrigin)) return callback(null, true);
+    if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
         return callback(null, true);
-    },
+    }
+    if (/^https:\/\/.*\.vercel\.app$/.test(cleanOrigin)) {
+        return callback(null, true);
+    }
+    return callback(null, true);
+};
+
+app.use(cors({
+    origin: checkOrigin,
     credentials: true,
     methods: ["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
@@ -53,7 +59,7 @@ app.use("/api/meetings", meetingRouter);
 // Socket.IO setup
 const io = new Server(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: checkOrigin,
         credentials: true,
         methods: ["GET", "POST"]
     }
