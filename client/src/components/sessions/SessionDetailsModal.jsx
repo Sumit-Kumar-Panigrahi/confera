@@ -12,13 +12,13 @@ const SessionDetailsModal = ({session, onClose}) => {
     const isEnded = session.status === "ended";
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
       <div className="bg-[#0f172a] rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
         {/* Modal Header */}
-        <div className="p-6 border-b border-slate-800/80 flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-slate-800/80 flex items-start sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-mono text-blue-400 font-semibold bg-blue-500/10 px-2.5 py-0.5 rounded-md border border-blue-500/20">
                 ID: {session.meetingId}
               </span>
@@ -30,7 +30,7 @@ const SessionDetailsModal = ({session, onClose}) => {
               </span>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-1.5">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mt-1.5">
               {session.title || "Meeting Details"}
             </h2>
             <p className="text-xs text-slate-400 mt-1">
@@ -40,7 +40,7 @@ const SessionDetailsModal = ({session, onClose}) => {
 
           <button 
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700"
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700 shrink-0"
             aria-label="Close Session Details"
           >
             <XIcon className="w-5 h-5"/>
@@ -48,10 +48,10 @@ const SessionDetailsModal = ({session, onClose}) => {
         </div>
 
         {/* Tab Title */}
-        <div className="flex border-b border-slate-800 px-6 bg-slate-900/60">
+        <div className="flex border-b border-slate-800 px-4 sm:px-6 bg-slate-900/60 overflow-x-auto">
           <button 
             onClick={() => setActiveTab("chat")}
-            className={`py-3 px-4 font-semibold text-xs border-b-2 cursor-pointer transition-all ${
+            className={`py-3 px-3 sm:px-4 font-semibold text-xs border-b-2 cursor-pointer transition-all whitespace-nowrap ${
               activeTab === "chat" 
                 ? "border-blue-500 text-blue-400" 
                 : "border-transparent text-slate-400 hover:text-slate-200"
@@ -62,7 +62,7 @@ const SessionDetailsModal = ({session, onClose}) => {
 
           <button 
             onClick={() => setActiveTab("participants")}
-            className={`py-3 px-4 font-semibold text-xs border-b-2 cursor-pointer transition-all ${
+            className={`py-3 px-3 sm:px-4 font-semibold text-xs border-b-2 cursor-pointer transition-all whitespace-nowrap ${
               activeTab === "participants" 
                 ? "border-blue-500 text-blue-400" 
                 : "border-transparent text-slate-400 hover:text-slate-200"
@@ -73,7 +73,7 @@ const SessionDetailsModal = ({session, onClose}) => {
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 p-6 overflow-y-auto min-h-75 bg-[#0b111e]">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-75 bg-[#0b111e]">
           {activeTab === 'chat' ? (
             <SessionChatTab messages={session.messages} />
           ) : (

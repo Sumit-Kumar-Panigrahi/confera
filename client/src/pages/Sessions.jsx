@@ -55,10 +55,10 @@ const Sessions = () => {
   });
 
   return (
-    <div className="p-6 sm:p-10 space-y-6 max-w-7xl w-full">
+    <div className="p-3.5 sm:p-6 md:p-8 space-y-6 max-w-7xl w-full">
       
       {/* Header Info Banner */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/90 shadow-sm flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
             <CalendarIcon className="w-3.5 h-3.5" />
@@ -73,53 +73,55 @@ const Sessions = () => {
         </div>
 
         {/* Search, Filter, and Refresh Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 sm:flex-none">
             <SearchIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Filter by title or code..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-2xs w-48 sm:w-56"
+              className="w-full sm:w-56 pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-2xs"
             />
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-full text-xs font-bold text-slate-600">
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <div className="flex bg-slate-100 p-1 rounded-full text-xs font-bold text-slate-600 overflow-x-auto">
+              <button
+                onClick={() => setStatusFilter("all")}
+                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                  statusFilter === "all" ? "bg-indigo-600 text-white shadow-xs" : "hover:text-slate-900"
+                }`}
+              >
+                All ({sessions.length})
+              </button>
+              <button
+                onClick={() => setStatusFilter("active")}
+                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                  statusFilter === "active" ? "bg-emerald-600 text-white shadow-xs" : "hover:text-slate-900"
+                }`}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => setStatusFilter("ended")}
+                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                  statusFilter === "ended" ? "bg-slate-700 text-white shadow-xs" : "hover:text-slate-900"
+                }`}
+              >
+                Completed
+              </button>
+            </div>
+
             <button
-              onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                statusFilter === "all" ? "bg-indigo-600 text-white shadow-xs" : "hover:text-slate-900"
-              }`}
+              onClick={fetchSessions}
+              disabled={loading}
+              className="p-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition-all cursor-pointer shadow-xs disabled:opacity-50 shrink-0"
+              title="Refresh Sessions"
             >
-              All ({sessions.length})
-            </button>
-            <button
-              onClick={() => setStatusFilter("active")}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                statusFilter === "active" ? "bg-emerald-600 text-white shadow-xs" : "hover:text-slate-900"
-              }`}
-            >
-              Active
-            </button>
-            <button
-              onClick={() => setStatusFilter("ended")}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                statusFilter === "ended" ? "bg-slate-700 text-white shadow-xs" : "hover:text-slate-900"
-              }`}
-            >
-              Completed
+              <RefreshCwIcon className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
             </button>
           </div>
-
-          <button
-            onClick={fetchSessions}
-            disabled={loading}
-            className="p-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition-all cursor-pointer shadow-xs disabled:opacity-50"
-            title="Refresh Sessions"
-          >
-            <RefreshCwIcon className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
-          </button>
         </div>
       </div>
 

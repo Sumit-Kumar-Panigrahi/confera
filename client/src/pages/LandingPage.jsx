@@ -22,13 +22,16 @@ import {
   LayersIcon,
   CalendarIcon,
   ClockIcon,
-  GlobeIcon
+  GlobeIcon,
+  MenuIcon,
+  XIcon
 } from 'lucide-react';
 
 const LandingPage = () => {
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const [meetingCode, setMeetingCode] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleStartMeeting = () => {
     if (isSignedIn) {
@@ -54,8 +57,8 @@ const LandingPage = () => {
       <div className="fixed top-1/3 -right-40 w-[600px] h-[600px] bg-[#fdf2f8] rounded-full blur-[140px] pointer-events-none -z-10" />
       <div className="fixed top-2/3 -left-40 w-[600px] h-[600px] bg-[#eff6ff] rounded-full blur-[140px] pointer-events-none -z-10" />
 
-      {/* 1. PUBLIC TOP NAVIGATION (Reference 1 Style) */}
-      <header className="w-full bg-white/80 backdrop-blur-xl border-b border-purple-100/80 sticky top-0 z-50 transition-colors">
+      {/* 1. PUBLIC TOP NAVIGATION */}
+      <header className="w-full bg-white/90 backdrop-blur-xl border-b border-purple-100/80 sticky top-0 z-50 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Brand Logo */}
@@ -71,15 +74,15 @@ const LandingPage = () => {
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-9 text-sm font-semibold text-slate-600">
+          <nav className="hidden md:flex items-center gap-8 lg:gap-9 text-sm font-semibold text-slate-600">
             <a href="#features" className="hover:text-[#7c3aed] transition-colors">Features</a>
             <a href="#solutions" className="hover:text-[#7c3aed] transition-colors">Solutions</a>
             <a href="#pricing" className="hover:text-[#7c3aed] transition-colors">Pricing Plan</a>
             <a href="#integrations" className="hover:text-[#7c3aed] transition-colors">Integrations</a>
           </nav>
 
-          {/* Right Action */}
-          <div className="flex items-center gap-3">
+          {/* Desktop Right Action */}
+          <div className="hidden md:flex items-center gap-3">
             <button
               onClick={() => navigate(isSignedIn ? '/dashboard' : '/login')}
               className="px-6 py-2.5 rounded-full text-sm font-bold border border-slate-300 hover:border-slate-400 text-slate-800 hover:bg-slate-50 transition-all cursor-pointer shadow-xs active:scale-95"
@@ -88,7 +91,66 @@ const LandingPage = () => {
             </button>
           </div>
 
+          {/* Mobile Hamburger Button */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2.5 rounded-2xl bg-purple-50 text-[#7c3aed] hover:bg-purple-100 transition-colors cursor-pointer border border-purple-200"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+            </button>
+          </div>
+
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-purple-100 bg-white/95 backdrop-blur-2xl px-5 py-6 space-y-4 animate-in slide-in-from-top-4 duration-200 shadow-xl">
+            <nav className="flex flex-col space-y-3 font-semibold text-base text-slate-700">
+              <a 
+                href="#features" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl hover:bg-purple-50 hover:text-[#7c3aed] transition-colors"
+              >
+                Features
+              </a>
+              <a 
+                href="#solutions" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl hover:bg-purple-50 hover:text-[#7c3aed] transition-colors"
+              >
+                Solutions
+              </a>
+              <a 
+                href="#pricing" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl hover:bg-purple-50 hover:text-[#7c3aed] transition-colors"
+              >
+                Pricing Plan
+              </a>
+              <a 
+                href="#integrations" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl hover:bg-purple-50 hover:text-[#7c3aed] transition-colors"
+              >
+                Integrations
+              </a>
+            </nav>
+
+            <div className="pt-2 border-t border-purple-100">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate(isSignedIn ? '/dashboard' : '/login');
+                }}
+                className="w-full py-3 rounded-full text-sm font-bold bg-[#7c3aed] text-white hover:bg-[#6d28d9] transition-all cursor-pointer shadow-md shadow-purple-500/20 text-center"
+              >
+                {isSignedIn ? "Go to Dashboard" : "Sign In / Register"}
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 2. HERO SECTION (Reference 1 Style) */}
@@ -381,8 +443,10 @@ const LandingPage = () => {
         </div>
 
         {/* Real Clerk Pricing Table Container */}
-        <div className="max-w-5xl mx-auto p-4 sm:p-8 rounded-3xl bg-white border border-purple-100 shadow-xl shadow-purple-500/5">
-          <PricingTable />
+        <div className="max-w-5xl mx-auto p-4 sm:p-8 rounded-3xl bg-white border border-purple-100 shadow-xl shadow-purple-500/5 overflow-x-auto">
+          <div className="min-w-[280px]">
+            <PricingTable />
+          </div>
         </div>
       </section>
 
@@ -398,20 +462,20 @@ const LandingPage = () => {
         </div>
 
         {/* Integration Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4">
-          <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-4">
+          <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
             <CalendarIcon className="w-4 h-4 text-blue-600" />
             <span>Google Calendar</span>
           </div>
-          <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
+          <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
             <MessageSquareIcon className="w-4 h-4 text-amber-600" />
             <span>Slack Workspace</span>
           </div>
-          <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
+          <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
             <LayersIcon className="w-4 h-4 text-slate-900" />
             <span>Notion Sync</span>
           </div>
-          <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
+          <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200 shadow-xs font-semibold text-xs text-slate-700">
             <UsersIcon className="w-4 h-4 text-indigo-600" />
             <span>Microsoft Teams</span>
           </div>
@@ -419,22 +483,22 @@ const LandingPage = () => {
       </section>
 
       {/* 7. ELEGANT FOOTER */}
-      <footer className="w-full bg-white border-t border-purple-100 mt-auto py-12 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
-          <div className="flex items-center gap-3">
-            <div className="size-7 rounded-xl bg-[#7c3aed] flex items-center justify-center text-white font-bold text-xs">
+      <footer className="w-full bg-white border-t border-purple-100 mt-auto py-10 sm:py-12 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500 text-center md:text-left">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+            <div className="size-7 rounded-xl bg-[#7c3aed] flex items-center justify-center text-white font-bold text-xs shrink-0">
               <VideoIcon className="w-4 h-4" />
             </div>
             <span className="font-extrabold text-slate-800 text-sm">Conferа Inc.</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span>Enterprise High-Definition Video Cloud</span>
           </div>
 
-          <div className="flex items-center gap-6 font-semibold">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 font-semibold">
             <Link to="/pricing" className="hover:text-[#7c3aed] transition-colors">Pricing</Link>
             <Link to="/dashboard" className="hover:text-[#7c3aed] transition-colors">Dashboard</Link>
             <Link to="/sessions" className="hover:text-[#7c3aed] transition-colors">Conferences</Link>
-            <span className="text-slate-400">© 2026 Conferа. All rights reserved.</span>
+            <span className="text-slate-400 w-full sm:w-auto mt-2 sm:mt-0">© 2026 Conferа. All rights reserved.</span>
           </div>
         </div>
       </footer>

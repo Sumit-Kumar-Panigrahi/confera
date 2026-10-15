@@ -11,7 +11,8 @@ import {
   BellIcon, 
   CopyIcon,
   CheckIcon,
-  ClockIcon
+  MenuIcon,
+  XIcon
 } from "lucide-react";
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useUser, useAuth, UserButton } from '@clerk/react';
@@ -25,6 +26,9 @@ const Protectedlayout = () => {
   const { getToken } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Mobile menu drawer state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // 'create' | 'join' | 'schedule' | 'invite'
@@ -61,6 +65,11 @@ const Protectedlayout = () => {
   useEffect(() => {
     fetchStats();
   }, [isSignedIn, api]);
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname, location.search]);
 
   // Extract clean code
   const extractMeetingCode = (input) => {
@@ -135,11 +144,11 @@ const Protectedlayout = () => {
 
   // Dynamic Page Title
   const getPageTitle = () => {
-    if (location.pathname === '/sessions') return "Conferences & Meeting Logs";
-    if (location.pathname === '/pricing') return "Subscription Plans & Pricing";
-    if (location.search.includes('tab=calendar')) return "Conference Calendar";
-    if (location.search.includes('tab=integrations')) return "Workspace Integrations";
-    return `Welcome back, ${userName}!`;
+    if (location.pathname === '/sessions') return "Conferences & Logs";
+    if (location.pathname === '/pricing') return "Plans & Pricing";
+    if (location.search.includes('tab=calendar')) return "Calendar";
+    if (location.search.includes('tab=integrations')) return "Integrations";
+    return `Welcome, ${userName}!`;
   };
 
   const isCurrentTab = (path, tabParam) => {
@@ -149,16 +158,19 @@ const Protectedlayout = () => {
     return location.pathname === path && (!location.search || location.search === '');
   };
 
-  return (
-    <div className="flex h-screen w-screen bg-[#f3f4f8] text-slate-800 font-sans overflow-hidden">
-      
-      {/* 1. UNIFIED LEFT SIDEBAR */}
-      <aside className="w-64 bg-[#11141d] text-slate-300 flex flex-col justify-between shrink-0 p-6 z-20 shadow-2xl">
-        
-        {/* Brand Logo */}
-        <div className="space-y-8">
+  const navigateTab = (url) => {
+    navigate(url);
+    setMobileMenuOpen(false);
+  };
+
+  // Reusable Sidebar Nav Content
+  const renderSidebarContent = () => (
+    <div className="flex flex-col justify-between h-full space-y-6">
+      {/* Top Brand Logo */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigateTab('/dashboard')}
             className="flex items-center gap-3 cursor-pointer group"
           >
             <div className="size-9 rounded-xl bg-gradient-to-tr from-[#6366f1] to-[#8b5cf6] p-0.5 shadow-md shadow-indigo-500/25 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -171,141 +183,184 @@ const Protectedlayout = () => {
             </span>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="space-y-1.5 text-xs font-semibold">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
-                isCurrentTab('/dashboard')
-                  ? "bg-slate-800 text-white shadow-sm font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              <LayoutDashboardIcon className="w-4 h-4 text-indigo-400" />
-              <span>Dashboard</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/dashboard?tab=calendar')}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
-                isCurrentTab('/dashboard', 'calendar')
-                  ? "bg-slate-800 text-white shadow-sm font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              <CalendarIcon className="w-4 h-4 text-slate-400" />
-              <span>Calendar</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/sessions')}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
-                location.pathname === '/sessions'
-                  ? "bg-slate-800 text-white shadow-sm font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              <VideoIcon className="w-4 h-4 text-slate-400" />
-              <span>Conferences & Logs</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/pricing')}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
-                location.pathname === '/pricing'
-                  ? "bg-slate-800 text-white shadow-sm font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              <BarChart3Icon className="w-4 h-4 text-slate-400" />
-              <span>Plans & Pricing</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/dashboard?tab=integrations')}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
-                isCurrentTab('/dashboard', 'integrations')
-                  ? "bg-slate-800 text-white shadow-sm font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              <LayersIcon className="w-4 h-4 text-slate-400" />
-              <span>Integrations</span>
-            </button>
-
-            <button
-              onClick={() => setActiveModal('schedule')}
-              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800/50"
-            >
-              <SettingsIcon className="w-4 h-4 text-slate-400" />
-              <span>Schedule Call</span>
-            </button>
-          </nav>
-        </div>
-
-        {/* Bottom Plan Card (Real Clerk Plan Sync) */}
-        <div className="bg-[#181c28] border border-slate-800 p-4 rounded-2xl relative overflow-hidden space-y-3">
-          <div className="absolute top-0 right-0 size-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-xl pointer-events-none" />
-          
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
-              {stats?.plan === 'premium' ? 'Premium Plan' : 'Free Plan'}
-            </span>
-            <p className="text-xs text-slate-300 font-medium leading-relaxed">
-              {stats?.plan === 'premium' 
-                ? 'Unlimited 4K calls, cloud transcripts, and 100 participants per room.'
-                : `${stats?.monthlyCount || 0} of ${stats?.monthlyLimit || 30} free monthly meetings used.`}
-            </p>
-          </div>
-
-          <button
-            onClick={() => navigate('/pricing')}
-            className="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs transition-all shadow-md cursor-pointer active:scale-95 text-center"
+          {/* Close button on mobile drawer */}
+          <button 
+            onClick={() => setMobileMenuOpen(false)}
+            className="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
-            {stats?.plan === 'premium' ? 'View Plan Details' : 'Upgrade via Clerk'}
+            <XIcon className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Navigation Links */}
+        <nav className="space-y-1 text-xs font-semibold">
+          <button
+            onClick={() => navigateTab('/dashboard')}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
+              isCurrentTab('/dashboard')
+                ? "bg-slate-800 text-white shadow-sm font-bold"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+            }`}
+          >
+            <LayoutDashboardIcon className="w-4 h-4 text-indigo-400" />
+            <span>Dashboard</span>
+          </button>
+
+          <button
+            onClick={() => navigateTab('/dashboard?tab=calendar')}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
+              isCurrentTab('/dashboard', 'calendar')
+                ? "bg-slate-800 text-white shadow-sm font-bold"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+            }`}
+          >
+            <CalendarIcon className="w-4 h-4 text-slate-400" />
+            <span>Calendar</span>
+          </button>
+
+          <button
+            onClick={() => navigateTab('/sessions')}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
+              location.pathname === '/sessions'
+                ? "bg-slate-800 text-white shadow-sm font-bold"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+            }`}
+          >
+            <VideoIcon className="w-4 h-4 text-slate-400" />
+            <span>Conferences & Logs</span>
+          </button>
+
+          <button
+            onClick={() => navigateTab('/pricing')}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
+              location.pathname === '/pricing'
+                ? "bg-slate-800 text-white shadow-sm font-bold"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+            }`}
+          >
+            <BarChart3Icon className="w-4 h-4 text-slate-400" />
+            <span>Plans & Pricing</span>
+          </button>
+
+          <button
+            onClick={() => navigateTab('/dashboard?tab=integrations')}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer ${
+              isCurrentTab('/dashboard', 'integrations')
+                ? "bg-slate-800 text-white shadow-sm font-bold"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+            }`}
+          >
+            <LayersIcon className="w-4 h-4 text-slate-400" />
+            <span>Integrations</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveModal('schedule');
+              setMobileMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800/50"
+          >
+            <SettingsIcon className="w-4 h-4 text-slate-400" />
+            <span>Schedule Call</span>
+          </button>
+        </nav>
+      </div>
+
+      {/* Bottom Plan Card */}
+      <div className="bg-[#181c28] border border-slate-800 p-4 rounded-2xl relative overflow-hidden space-y-3">
+        <div className="absolute top-0 right-0 size-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-xl pointer-events-none" />
+        
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
+            {stats?.plan === 'premium' ? 'Premium Plan' : 'Free Plan'}
+          </span>
+          <p className="text-xs text-slate-300 font-medium leading-relaxed">
+            {stats?.plan === 'premium' 
+              ? 'Unlimited 4K calls, cloud transcripts, and 100 participants per room.'
+              : `${stats?.monthlyCount || 0} of ${stats?.monthlyLimit || 30} free monthly meetings used.`}
+          </p>
+        </div>
+
+        <button
+          onClick={() => navigateTab('/pricing')}
+          className="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs transition-all shadow-md cursor-pointer active:scale-95 text-center"
+        >
+          {stats?.plan === 'premium' ? 'View Plan Details' : 'Upgrade via Clerk'}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen w-screen bg-[#f3f4f8] text-slate-800 font-sans overflow-hidden relative">
+      
+      {/* 1. DESKTOP PERMANENT LEFT SIDEBAR */}
+      <aside className="w-64 bg-[#11141d] text-slate-300 hidden lg:flex flex-col justify-between shrink-0 p-6 z-20 shadow-2xl">
+        {renderSidebarContent()}
       </aside>
 
-      {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      {/* 2. MOBILE & TABLET SLIDE-IN DRAWER */}
+      {mobileMenuOpen && (
+        <div 
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-200"
+        />
+      )}
+      <div 
+        className={`fixed inset-y-0 left-0 w-72 bg-[#11141d] text-slate-300 p-6 z-50 lg:hidden shadow-2xl transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {renderSidebarContent()}
+      </div>
+
+      {/* 3. MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col overflow-y-auto min-w-0">
         
         {/* Top Header Bar */}
-        <header className="w-full bg-white border-b border-slate-200/80 px-6 sm:px-10 py-4 flex items-center justify-between sticky top-0 z-10 shadow-xs">
+        <header className="w-full bg-white border-b border-slate-200/80 px-4 sm:px-6 md:px-10 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
           
-          {/* Dynamic Page Greeting / Title */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          {/* Left: Mobile Hamburger + Dynamic Title */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+              title="Open Navigation Menu"
+            >
+              <MenuIcon className="w-5 h-5" />
+            </button>
+
+            <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight truncate max-w-[160px] sm:max-w-xs md:max-w-none">
               {getPageTitle()}
             </h1>
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-3">
-            {/* Search Input */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Search Input (Hidden on mobile) */}
             <div className="relative hidden md:block">
               <SearchIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search meetings, logs..."
-                className="pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-56"
+                className="pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 lg:w-56"
               />
             </div>
 
             {/* Quick Action + Create Dropdown */}
             <button
               onClick={() => setActiveModal('create')}
-              className="px-4 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="px-3 sm:px-4 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
-              <span>Create</span>
               <PlusIcon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Create</span>
             </button>
 
             {/* Notifications */}
             <button 
               onClick={() => toast("Notifications up to date")}
-              className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
+              className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer hidden sm:block"
               title="Notifications"
             >
               <BellIcon className="w-4 h-4" />
@@ -321,7 +376,7 @@ const Protectedlayout = () => {
         </header>
 
         {/* Content Outlet */}
-        <main className="flex-1">
+        <main className="flex-1 w-full">
           <Outlet context={{ 
             stats, 
             refreshStats: fetchStats, 
@@ -421,7 +476,7 @@ const Protectedlayout = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Date</label>
               <input
@@ -480,7 +535,7 @@ const Protectedlayout = () => {
                 className="flex items-center gap-1.5"
               >
                 {copiedInvite ? <CheckIcon className="w-3.5 h-3.5 text-emerald-400" /> : <CopyIcon className="w-3.5 h-3.5" />}
-                <span>{copiedInvite ? "Copied Full Invite" : "Copy Full Invitation"}</span>
+                <span>{copiedInvite ? "Copied" : "Copy Full Invitation"}</span>
               </Button>
 
               <Button
