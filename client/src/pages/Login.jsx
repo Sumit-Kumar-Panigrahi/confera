@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SignUp, SignIn, useUser } from '@clerk/react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { VideoIcon, ShieldCheckIcon, ZapIcon, GlobeIcon } from 'lucide-react';
 
 const Login = ({ mode = "login" }) => {
   const isRegister = mode === "register";
   const { isLoaded, isSignedIn } = useUser();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
 
   if (isLoaded && isSignedIn) {
     return <Navigate to="/dashboard" replace />;
