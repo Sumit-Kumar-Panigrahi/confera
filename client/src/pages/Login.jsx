@@ -1,22 +1,28 @@
 import React, { useEffect } from 'react';
 import { SignUp, SignIn, useUser } from '@clerk/react';
-import { Navigate, Link, useNavigate } from 'react-router-dom';
+import { Navigate, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { VideoIcon, ShieldCheckIcon, ZapIcon, GlobeIcon } from 'lucide-react';
 
 const Login = ({ mode = "login" }) => {
   const isRegister = mode === "register";
   const { isLoaded, isSignedIn } = useUser();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Extract redirect url if user was trying to join a meeting or access another page
+  const redirectUrl = searchParams.get('redirect_url') || '/dashboard';
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      navigate('/dashboard', { replace: true });
+      navigate(redirectUrl, { replace: true });
     }
-  }, [isLoaded, isSignedIn, navigate]);
+  }, [isLoaded, isSignedIn, navigate, redirectUrl]);
 
   if (isLoaded && isSignedIn) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={redirectUrl} replace />;
   }
+
+  const loginParam = redirectUrl !== '/dashboard' ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : '';
 
   return (
     <div className="min-h-screen w-full bg-[#0c0f17] text-slate-100 flex flex-col justify-between items-center p-4 sm:p-8 relative overflow-hidden font-sans selection:bg-indigo-600 selection:text-white">
@@ -56,17 +62,17 @@ const Login = ({ mode = "login" }) => {
             <SignUp 
               routing="path" 
               path="/register" 
-              signInUrl="/login" 
-              fallbackRedirectUrl="/dashboard"
-              forceRedirectUrl="/dashboard"
+              signInUrl={`/login${loginParam}`}
+              fallbackRedirectUrl={redirectUrl}
+              forceRedirectUrl={redirectUrl}
             />
           ) : (
             <SignIn 
               routing="path" 
               path="/login" 
-              signUpUrl="/register" 
-              fallbackRedirectUrl="/dashboard"
-              forceRedirectUrl="/dashboard"
+              signUpUrl={`/register${loginParam}`}
+              fallbackRedirectUrl={redirectUrl}
+              forceRedirectUrl={redirectUrl}
             />
           )}
         </div>

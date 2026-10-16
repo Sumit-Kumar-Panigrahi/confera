@@ -27,10 +27,6 @@ const MeetingRoom = () => {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
 
-  // Guest Name Support for unauthenticated participants
-  const [guestName, setGuestName] = useState(() => localStorage.getItem('confera_guest_name') || '');
-  const [guestJoined, setGuestJoined] = useState(() => Boolean(user || localStorage.getItem('confera_guest_name')));
-
   // Meeting states
   const [meetingDetails, setMeetingDetails] = useState(null);
   const [loadingMeeting, setLoadingMeeting] = useState(true);
@@ -45,18 +41,7 @@ const MeetingRoom = () => {
 
   const api = useMemo(() => createApiClient(getToken), [getToken]);
 
-  // Derived user object (supports Clerk user OR guest user)
-  const effectiveUser = useMemo(() => {
-    if (user) return user;
-    const effectiveName = guestName.trim() || 'Guest User';
-    return {
-      id: `guest_${cleanRoomId}_${Math.random().toString(36).substring(2, 7)}`,
-      fullName: effectiveName,
-      name: effectiveName,
-      firstName: effectiveName,
-      imageUrl: '',
-    };
-  }, [user, guestName, cleanRoomId]);
+  const effectiveUser = user;
 
   // Load meeting details from database
   useEffect(() => {
@@ -168,60 +153,52 @@ const MeetingRoom = () => {
     setActiveDrawerTab((current) => (current === tab ? null : tab));
   };
 
-  const handleGuestJoinSubmit = (e) => {
-    e.preventDefault();
-    if (!guestName.trim()) {
-      toast.error("Please enter your name to join");
-      return;
-    }
-    localStorage.setItem('confera_guest_name', guestName.trim());
-    setGuestJoined(true);
-  };
-
-  // 1. PRE-JOIN PROMPT (For non-logged in users who haven't entered their name yet)
-  if (isLoaded && !user && !guestJoined) {
+  // 1. AUTHENTICATION REQUIRED PROMPT (When unauthenticated user clicks the meeting link)
+  if (isLoaded && !user) {
+    const meetingPath = `/meeting/${cleanRoomId}`;
     return (
       <div className="min-h-screen w-screen bg-[#070a13] text-slate-100 flex flex-col items-center justify-center p-4 selection:bg-indigo-600 font-sans">
-        <div className="w-full max-w-md bg-[#0c101d] border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-          <div className="text-center space-y-2">
-            <div className="size-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 mx-auto flex items-center justify-center shadow-lg shadow-indigo-600/30">
-              <VideoIcon className="w-6 h-6 text-white" />
+        <div className="w-full max-w-md bg-[#0c101d] border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center">
+          
+          <div className="size-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 mx-auto flex items-center justify-center shadow-lg shadow-indigo-600/30">
+            <VideoIcon className="w-7 h-7 text-white" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
+              <ShieldCheckIcon className="w-3.5 h-3.5" />
+              <span>Authentication Required</span>
             </div>
-            <h2 className="text-xl font-black text-white">Join Meeting</h2>
-            <p className="text-xs text-slate-400">
-              {meetingDetails?.title || `Room Code: ${cleanRoomId}`}
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Sign in to join meeting
+            </h2>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+              Please sign in or create an account to enter <span className="text-indigo-400 font-bold font-mono">{cleanRoomId}</span>. You will be automatically connected to this meeting once signed in.
             </p>
           </div>
 
-          <form onSubmit={handleGuestJoinSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Your Display Name
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Alex Morgan"
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                autoFocus
-              />
-            </div>
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={() => navigate(`/login?redirect_url=${encodeURIComponent(meetingPath)}`)}
+              className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>Sign In & Join Meeting</span>
+            </button>
 
             <button
-              type="submit"
-              className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-95"
+              onClick={() => navigate(`/register?redirect_url=${encodeURIComponent(meetingPath)}`)}
+              className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
             >
-              Join Conference
+              <span>Create New Account</span>
             </button>
-          </form>
+          </div>
 
-          <div className="text-center pt-2 border-t border-slate-800/80">
-            <Link to="/login" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
-              Have a Confera account? Sign in
+          <div className="pt-2 border-t border-slate-800/80">
+            <Link to="/" className="text-xs text-slate-400 hover:text-white transition-colors">
+              ← Return to Confera Home
             </Link>
           </div>
+
         </div>
       </div>
     );
