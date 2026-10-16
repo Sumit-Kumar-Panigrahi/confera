@@ -91,8 +91,11 @@ export function setupSocketIO(io) {
         // User joins a meeting room
         socket.on("join-room", async ({ roomId, user, audioEnabled = true, videoEnabled = true }) => {
             try {
+                const cleanRoomId = (roomId || "").trim().toLowerCase();
+                if (!cleanRoomId) return;
+
                 // Verify meeting status from DB
-                let meetings = await sql`SELECT * FROM meetings WHERE meeting_id = ${roomId}`;
+                let meetings = await sql`SELECT * FROM meetings WHERE LOWER(meeting_id) = ${cleanRoomId}`;
                 let meeting = meetings[0];
 
                 if (!meeting) {
@@ -100,7 +103,7 @@ export function setupSocketIO(io) {
                     try {
                         const [created] = await sql`
                             INSERT INTO meetings (meeting_id, title, host_id, status)
-                            VALUES (${roomId}, ${roomId.startsWith('pmi') ? 'Personal Meeting Room' : 'Live Conference'}, ${hostId}, 'active')
+                            VALUES (${cleanRoomId}, ${cleanRoomId.startsWith('pmi') ? 'Personal Meeting Room' : 'Live Conference'}, ${hostId}, 'active')
                             RETURNING *
                         `;
                         meeting = created;
@@ -108,23 +111,34 @@ export function setupSocketIO(io) {
                         try {
                             const [created] = await sql`
                                 INSERT INTO meetings (meeting_id, title, status)
-                                VALUES (${roomId}, 'Live Conference', 'active')
+                                VALUES (${cleanRoomId}, 'Live Conference', 'active')
                                 RETURNING *
                             `;
                             meeting = created;
                         } catch (e2) {
-                            meeting = { id: 0, meeting_id: roomId, title: 'Live Conference', status: 'active', host_id: null };
+                            meeting = { id: 0, meeting_id: cleanRoomId, title: 'Live Conference', status: 'active', host_id: null };
                         }
                     }
                 }
 
+                // If meeting was marked ended but users are still in room or it's a PMI room, reactivate
                 if (meeting && meeting.status === "ended") {
-                    socket.emit("meeting-ended", { message: "This meeting has already ended" });
-                    return;
+                    const roomIsActive = rooms.has(cleanRoomId) && rooms.get(cleanRoomId).size > 0;
+                    if (cleanRoomId.startsWith('pmi') || roomIsActive) {
+                        try {
+                            await sql`UPDATE meetings SET status = 'active', updated_at = NOW() WHERE id = ${meeting.id}`;
+                            meeting.status = "active";
+                        } catch (e) {
+                            meeting.status = "active";
+                        }
+                    } else {
+                        socket.emit("meeting-ended", { message: "This meeting has already ended" });
+                        return;
+                    }
                 }
 
-                currentRoomId = roomId;
-                const isHost = meeting.host_id && user?.id && meeting.host_id.toString() === user.id.toString();
+                currentRoomId = cleanRoomId;
+                const isHost = Boolean(meeting.host_id && user?.id && meeting.host_id.toString() === user.id.toString());
 
                 currentUser = {
                     socketId: socket.id,
@@ -136,11 +150,11 @@ export function setupSocketIO(io) {
                     videoEnabled
                 };
 
-                if (!rooms.has(roomId)) {
-                    rooms.set(roomId, new Map());
+                if (!rooms.has(cleanRoomId)) {
+                    rooms.set(cleanRoomId, new Map());
                 }
 
-                const roomParticipants = rooms.get(roomId);
+                const roomParticipants = rooms.get(cleanRoomId);
 
                 // Fetch host plan to enforce participant limits (10 for free, 100 for premium)
                 let hostPlan = "free";
@@ -157,7 +171,7 @@ export function setupSocketIO(io) {
                     return;
                 }
 
-                socket.join(roomId);
+                socket.join(cleanRoomId);
 
                 // Get existing participants in the room
                 const existingUsers = Array.from(roomParticipants.values());
@@ -187,7 +201,7 @@ export function setupSocketIO(io) {
                 socket.emit("all-users", existingUsers);
 
                 // Notify everyone else in the room
-                socket.to(roomId).emit("user-joined", currentUser);
+                socket.to(cleanRoomId).emit("user-joined", currentUser);
 
             } catch (error) {
                 console.error("Error joining room in socket:", error);
