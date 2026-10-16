@@ -33,9 +33,11 @@ export const useChat = (roomId, user) => {
     };
   }, []);
 
+  const cleanRoomId = (roomId || '').trim().toLowerCase();
+
   const sendMessage = useCallback(
     (text) => {
-      if (!text || !text.trim() || !roomId) return;
+      if (!text || !text.trim() || !cleanRoomId) return;
 
       const trimmedText = text.trim();
       const socket = socketRef.current || getSocket();
@@ -47,7 +49,7 @@ export const useChat = (roomId, user) => {
 
       if (socket && socket.connected) {
         socket.emit("send-message", {
-          roomId,
+          roomId: cleanRoomId,
           message: trimmedText,
           user: senderData,
         });
