@@ -258,6 +258,15 @@ export function setupSocketIO(io) {
             });
         });
 
+        // Screen share toggle event
+        socket.on("toggle-screen-share", ({ roomId, isScreenSharing }) => {
+            const targetRoom = roomId || currentRoomId;
+            socket.to(targetRoom).emit("user-toggle-screen-share", {
+                socketId: socket.id,
+                isScreenSharing,
+            });
+        });
+
         // Chat message event -> persist to DB & broadcast
         socket.on("send-message", async ({ roomId, message, user }) => {
             try {

@@ -25,16 +25,68 @@ const VideoTile = ({
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hasStreamTracks, setHasStreamTracks] = useState(false);
 
+  // Check if stream has active video track
+  const checkVideoTrack = () => {
+    if (!stream) return false;
+    const tracks = stream.getVideoTracks();
+    return tracks.length > 0 && tracks.some(t => t.readyState === 'live' && t.enabled);
+  };
+
+  const hasLiveVideo = Boolean(videoEnabled && checkVideoTrack());
+
+  // Attach and play stream whenever stream changes or videoEnabled changes
   useEffect(() => {
-    if (videoRef.current) {
-      if (stream) {
-        videoRef.current.srcObject = stream;
-      } else {
-        videoRef.current.srcObject = null;
-      }
+    const video = videoRef.current;
+    if (!video) return;
+
+    // React bug workaround: explicitly set DOM muted property
+    video.muted = isLocal;
+
+    if (stream) {
+      video.srcObject = stream;
+      setHasStreamTracks(stream.getVideoTracks().length > 0);
+
+      const playVideo = () => {
+        video.play().catch((err) => {
+          // Autoplay policy: if unmuted autoplay is blocked for remote video, mute and retry
+          if (!isLocal && err.name === 'NotAllowedError') {
+            console.warn("Autoplay blocked, attempting muted play:", err);
+            video.muted = true;
+            video.play().catch((e) => console.warn("Muted play failed:", e));
+          }
+        });
+      };
+
+      video.onloadedmetadata = () => {
+        playVideo();
+      };
+
+      // In case metadata is already loaded
+      playVideo();
+
+      // Listen to track unmute events (WebRTC first packet arrival)
+      const tracks = stream.getTracks();
+      const handleUnmute = () => {
+        setHasStreamTracks(true);
+        playVideo();
+      };
+
+      tracks.forEach((t) => {
+        t.addEventListener('unmute', handleUnmute);
+      });
+
+      return () => {
+        tracks.forEach((t) => {
+          t.removeEventListener('unmute', handleUnmute);
+        });
+      };
+    } else {
+      video.srcObject = null;
+      setHasStreamTracks(false);
     }
-  }, [stream]);
+  }, [stream, isLocal]);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
@@ -61,19 +113,19 @@ const VideoTile = ({
             : 'border-slate-800/80 hover:border-slate-700'
       }`}
     >
-      {/* Video element - muted for local to prevent echo feedback, live for remote */}
+      {/* Video element - muted for local, active for remote */}
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted={isLocal}
         className={`w-full h-full object-cover transition-opacity duration-300 ${
-          videoEnabled ? "opacity-100" : "opacity-0 pointer-events-none absolute"
+          hasLiveVideo ? "opacity-100" : "opacity-0 pointer-events-none absolute"
         } ${isLocal && !isScreenShare ? "-scale-x-100" : ""}`}
       />
 
-      {/* Camera Off Placeholder */}
-      {!videoEnabled && (
+      {/* Camera Off Placeholder (Rendered whenever camera is off OR stream has no video) */}
+      {!hasLiveVideo && (
         <div className="flex flex-col items-center justify-center space-y-3 z-10 p-4">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-blue-500 p-0.5 shadow-xl shadow-indigo-600/25 flex items-center justify-center">
             <div className="w-full h-full rounded-full bg-[#0d1222] flex items-center justify-center text-white text-xl sm:text-2xl font-black uppercase tracking-wider">
@@ -82,7 +134,7 @@ const VideoTile = ({
           </div>
           <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-900/90 text-slate-300 border border-slate-700/80 flex items-center gap-1.5 shadow-sm">
             <VideoOffIcon className="w-3 h-3 text-rose-400" />
-            Camera off
+            {isScreenShare ? "Screen share paused" : "Camera off"}
           </span>
         </div>
       )}

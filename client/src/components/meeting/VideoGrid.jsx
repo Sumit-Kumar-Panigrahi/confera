@@ -40,16 +40,17 @@ const VideoGrid = ({
     audioEnabled: u.audioEnabled ?? true,
     videoEnabled: u.videoEnabled ?? true,
     isHost: Boolean(u.isHost || (meetingHostId && u.userId && meetingHostId.toString() === u.userId.toString())),
-    isScreenShare: false
+    isScreenShare: Boolean(u.isScreenShare)
   }));
 
   const allParticipants = [localParticipant, ...remoteParticipants];
   const totalCount = allParticipants.length;
 
   // Check if someone is pinned or screen sharing
+  const screenSharer = allParticipants.find(p => p.isScreenShare);
   const pinnedUser = pinnedSocketId 
     ? allParticipants.find(p => p.socketId === pinnedSocketId) 
-    : (isScreenSharing ? localParticipant : null);
+    : screenSharer;
 
   // 1. PINNED OR SCREEN SHARING VIEW
   if (pinnedUser) {
